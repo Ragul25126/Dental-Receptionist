@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { MessageSquare, Sparkles, User } from 'lucide-react'
 import { useCall } from '../../context/CallContext'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { cn } from '../../lib/utils'
 
 export const TranscriptPanel: React.FC = () => {
@@ -19,149 +18,145 @@ export const TranscriptPanel: React.FC = () => {
   }, [messages, agentState])
 
   return (
-    <Card className="flex flex-col h-[460px] border border-gray-200/60 bg-white/70 dark:border-zinc-800/60 dark:bg-zinc-900/60 overflow-hidden">
-      <CardHeader className="border-b border-gray-100 dark:border-zinc-800/60 pb-3 p-5 shrink-0">
-        <CardTitle className="text-base font-bold text-gray-800 dark:text-zinc-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4.5 w-4.5 text-teal-500" />
-            <span>Live Conversation Transcript</span>
+    <div 
+      ref={scrollRef} 
+      className="max-h-[300px] min-h-[160px] overflow-y-auto p-1 space-y-4 flex flex-col scroll-smooth"
+    >
+      {messages.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 my-auto">
+          <div className="h-10 w-10 rounded-xl bg-[var(--hover-color)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] mb-3 shadow-inner">
+            <MessageSquare className="h-4 w-4" />
           </div>
-          {isCallActive && (
-            <span className="text-[10px] font-bold text-teal-650 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-              Live Stream
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent 
-        ref={scrollRef} 
-        className="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50/20 dark:bg-zinc-950/10"
-      >
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6">
-            <div className="h-12 w-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-zinc-500 mb-3 border border-gray-200/20">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-zinc-300">
-              No Active Dialogue
-            </h4>
-            <p className="text-xs text-gray-400 dark:text-zinc-500 max-w-[220px] mt-1 font-medium leading-relaxed">
-              Transcript will display user and AI responses here in real-time.
-            </p>
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const isAI = msg.sender === 'ai'
-            const isSystem = msg.message.startsWith('[Tool')
+          <h4 className="text-xs font-bold text-[var(--text-primary)]">
+            Ready for Conversation
+          </h4>
+          <p className="text-[10px] text-[var(--text-secondary)] max-w-[180px] mt-1 font-semibold leading-relaxed">
+            Sarah is listening. Speak to start the receptionist sync.
+          </p>
+        </div>
+      ) : (
+        messages.map((msg) => {
+          const isAI = msg.sender === 'ai'
+          const isSystem = msg.message.startsWith('[Tool')
 
-            if (isSystem) {
-              const isSuccess = msg.message.includes('Success')
-              return (
-                <div 
-                  key={msg.id} 
-                  className={cn(
-                    "w-full max-w-sm mx-auto my-2.5 p-3 rounded-xl border text-[11px] font-bold text-center flex items-center justify-center gap-2 animate-scaleUp",
-                    isSuccess 
-                      ? "bg-emerald-50/60 border-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900/40 dark:text-emerald-400" 
-                      : "bg-teal-50/60 border-teal-100 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900/40 dark:text-teal-400"
-                  )}
-                >
-                  <span className={cn(
-                    "h-1.5 w-1.5 rounded-full shrink-0",
-                    isSuccess ? "bg-emerald-500" : "bg-teal-500 animate-pulse"
-                  )} />
-                  <span>
-                    {msg.message.replace('[', '').replace(']', '')}
-                  </span>
-                </div>
-              )
-            }
-            
+          if (isSystem) {
+            const isSuccess = msg.message.includes('Success')
             return (
-              <div
-                key={msg.id}
+              <div 
+                key={msg.id} 
                 className={cn(
-                  "flex gap-3 max-w-[85%] animate-fadeIn",
-                  isAI ? "mr-auto flex-row" : "ml-auto flex-row-reverse"
+                  "w-fit max-w-[90%] mx-auto my-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-black text-center flex items-center justify-center gap-2 animate-scaleUp",
+                  isSuccess 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
                 )}
-                style={{
-                  animationDuration: '0.25s'
-                }}
               >
-                {/* Bubble avatar */}
-                <div
-                  className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center border shrink-0 text-white shadow-sm",
-                    isAI 
-                      ? "bg-gradient-to-tr from-teal-500 to-teal-400 border-teal-200 dark:border-teal-800" 
-                      : "bg-gradient-to-tr from-blue-500 to-blue-400 border-blue-200 dark:border-blue-800"
-                  )}
-                >
-                  {isAI ? (
-                    <Sparkles className="h-3.5 w-3.5" />
-                  ) : (
-                    <User className="h-3.5 w-3.5" />
-                  )}
-                </div>
-
-                {/* Message Bubble wrapper */}
-                <div className="flex flex-col">
-                  {/* Sender Name */}
-                  <span className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider mb-1 text-gray-455 dark:text-zinc-500",
-                    isAI ? "text-left" : "text-right"
-                  )}>
-                    {isAI ? 'Sarah (AI)' : 'Patient'}
-                  </span>
-                  
-                  {/* Bubble body */}
-                  <div
-                    className={cn(
-                      "p-3 rounded-xl text-xs leading-relaxed shadow-sm font-semibold",
-                      isAI
-                        ? "bg-white border border-gray-200/50 text-gray-800 dark:bg-white dark:border-white/10 dark:text-zinc-900 rounded-tl-none"
-                        : "bg-teal-500 text-white rounded-tr-none"
-                    )}
-                  >
-                    {msg.message}
-                    {msg.isPartial && (
-                      <span className="inline-block w-1.5 h-3.5 ml-1 bg-white/60 dark:bg-zinc-400 animate-pulse align-middle" />
-                    )}
-                  </div>
-
-                  {/* Timestamp */}
-                  <span className={cn(
-                    "text-[9px] font-medium text-gray-450 dark:text-zinc-550 mt-1 font-mono",
-                    isAI ? "text-left" : "text-right"
-                  )}>
-                    {msg.timestamp}
-                  </span>
-                </div>
+                <span className={cn(
+                  "h-1 w-1 rounded-full shrink-0",
+                  isSuccess ? "bg-emerald-500" : "bg-blue-500 animate-pulse"
+                )} />
+                <span>
+                  {msg.message.replace('[', '').replace(']', '')}
+                </span>
               </div>
             )
-          })
-        )}
+          }
+          
+          return (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex gap-2.5 max-w-[90%] animate-fadeIn",
+                isAI ? "mr-auto flex-row" : "ml-auto flex-row-reverse"
+              )}
+              style={{
+                animationDuration: '0.2s'
+              }}
+            >
+              {/* Bubble Avatar */}
+              <div
+                className={cn(
+                  "h-7 w-7 rounded-full flex items-center justify-center border shrink-0 text-white shadow-sm font-bold text-xs select-none",
+                  isAI 
+                    ? "bg-gradient-to-tr from-blue-500 to-teal-400 border-blue-400/20" 
+                    : "bg-gradient-to-tr from-slate-700 to-slate-550 border-slate-500/20"
+                )}
+              >
+                {isAI ? (
+                  <Sparkles className="h-3 w-3" />
+                ) : (
+                  <User className="h-3 w-3" />
+                )}
+              </div>
 
-        {/* Live Typing / Listening indicator */}
-        {isCallActive && agentState === 'listening' && (
-          <div className="flex gap-3 max-w-[85%] mr-auto items-end animate-pulse">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center shrink-0 text-white shadow-sm">
-              <User className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-wider mb-1 text-gray-455 dark:text-zinc-500">
-                Patient is speaking...
-              </span>
-              <div className="bg-gray-100 border border-gray-200/50 p-2.5 rounded-xl rounded-tl-none flex gap-1 items-center dark:bg-zinc-800 dark:border-zinc-750">
-                <span className="h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-gray-400 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+              {/* Message Bubble wrapper */}
+              <div className="flex flex-col min-w-0">
+                {/* Bubble Body */}
+                <div
+                  className={cn(
+                    "p-3 rounded-xl text-[12px] leading-relaxed shadow-sm font-semibold border transition-all select-text",
+                    isAI
+                      ? "bg-[var(--hover-color)] border-[var(--border-color)] text-[var(--text-primary)] rounded-tl-none"
+                      : "bg-blue-500 text-white border-blue-600/15 rounded-tr-none"
+                  )}
+                >
+                  {msg.message}
+                  {msg.isPartial && (
+                    <span className="inline-block w-1 h-3 ml-1 bg-current opacity-70 animate-pulse align-middle" />
+                  )}
+                </div>
+
+                {/* Timestamp */}
+                <span className={cn(
+                  "text-[8px] font-bold text-[var(--text-secondary)] mt-1 font-mono",
+                  isAI ? "text-left" : "text-right"
+                )}>
+                  {msg.timestamp}
+                </span>
               </div>
             </div>
+          )
+        })
+      )}
+
+      {/* Live Speaking / Listening states animations */}
+      {isCallActive && agentState === 'listening' && (
+        <div className="flex gap-2.5 max-w-[90%] ml-auto flex-row-reverse items-end animate-pulse">
+          <div className="h-7 w-7 rounded-full bg-blue-550/10 border border-blue-500/20 flex items-center justify-center shrink-0 text-blue-500 shadow-sm">
+            <User className="h-3 w-3" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex flex-col items-end">
+            <div className="bg-blue-500/10 border border-blue-500/25 p-2 rounded-xl rounded-tr-none flex gap-1 items-center">
+              <span className="h-1 w-1 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1 w-1 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1 w-1 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-1">
+              Patient speaking...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {isCallActive && agentState === 'speaking' && (
+        <div className="flex gap-2.5 max-w-[90%] mr-auto flex-row items-end animate-pulse">
+          <div className="h-7 w-7 rounded-full bg-teal-550/10 border border-teal-500/20 flex items-center justify-center shrink-0 text-teal-550 shadow-sm">
+            <Sparkles className="h-3 w-3" />
+          </div>
+          <div className="flex flex-col items-start">
+            <div className="bg-[var(--hover-color)] border border-[var(--border-color)] p-2 rounded-xl rounded-tl-none flex gap-1 items-center">
+              <span className="h-1 w-1 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1 w-1 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1 w-1 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mt-1">
+              Sarah speaking...
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
+
+export default TranscriptPanel

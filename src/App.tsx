@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react'
-import { Sparkles, Sun, Moon, History, Settings as SettingsIcon, BarChart2 } from 'lucide-react'
+import { 
+  Sparkles, 
+  Sun, 
+  Moon, 
+  History, 
+  Settings as SettingsIcon, 
+  BarChart2, 
+  ChevronLeft, 
+  ChevronRight, 
+  Search, 
+  Bell, 
+  Plus, 
+  User as UserIcon 
+} from 'lucide-react'
 import { CallProvider, useCall } from './context/CallContext'
 import { StatsGrid } from './components/StatsGrid'
 import { ChartsSection } from './components/ChartsSection'
 import { VoiceAgentWidget } from './components/VoiceAgentWidget'
-import { TranscriptPanel } from './components/VoiceAgent/TranscriptPanel'
 import { BookingSummary } from './components/VoiceAgent/BookingSummary'
 import { CalendarPreview } from './components/CalendarPreview'
-import { AiInsights } from './components/AiInsights'
 import { RecentCalls } from './components/RecentCalls'
 import { SettingsPanel } from './components/SettingsPanel'
 import { FloatingCallControls } from './components/FloatingCallControls'
@@ -18,8 +29,9 @@ const DashboardContent: React.FC<{ activeTab: string; setActiveTab: (tab: string
   activeTab, 
   setActiveTab 
 }) => {
-  const { isCallActive, clinicSettings } = useCall()
-  const [darkMode, setDarkMode] = useState(false)
+  const { isCallActive, clinicSettings, startCall } = useCall()
+  const [darkMode, setDarkMode] = useState(true) // Default to dark mode as requested
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   // Manage Dark Mode class toggles
   useEffect(() => {
@@ -31,178 +43,234 @@ const DashboardContent: React.FC<{ activeTab: string; setActiveTab: (tab: string
     }
   }, [darkMode])
 
-  return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950 transition-colors duration-300 pb-28 relative overflow-x-hidden">
-      {/* Ambient Background Gradient Blobs */}
-      <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-teal-300/10 dark:bg-teal-900/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-300/10 dark:bg-blue-900/5 blur-[150px] pointer-events-none" />
+  // Get current formatted date
+  const getFormattedDate = () => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    return new Date().toLocaleDateString('en-US', options)
+  }
 
+  return (
+    <div className="min-h-screen flex text-[var(--text-primary)] transition-colors duration-200" style={{ backgroundColor: 'var(--bg-page)' }}>
       {/* Toast Manager */}
       <ToastNotification />
 
-      {/* Main SaaS Navbar */}
-      <nav className="sticky top-0 z-30 border-b border-gray-200/60 bg-white/80 dark:border-zinc-800/60 dark:bg-zinc-900/80 backdrop-blur-md">
-        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-          
-          {/* Logo Brand */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-teal-500 to-blue-500 flex items-center justify-center text-white shadow-md shadow-teal-500/10">
-              <Sparkles className="h-5 w-5 fill-current" />
+      {/* 5. Collapsible Sidebar Redesign */}
+      <aside 
+        className={cn(
+          "sticky top-0 h-screen shrink-0 border-r transition-all duration-300 flex flex-col justify-between z-40",
+          isSidebarCollapsed ? "w-20" : "w-64"
+        )}
+        style={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border-color)' }}
+      >
+        <div>
+          {/* Sidebar Brand Header */}
+          <div className="h-16 flex items-center justify-between px-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-blue-500/10">
+                <Sparkles className="h-5 w-5 fill-current" />
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex flex-col select-none">
+                  <span className="font-extrabold text-xs tracking-tight truncate max-w-[140px] text-[var(--text-primary)]">
+                    {clinicSettings.clinicName}
+                  </span>
+                  <span className="text-[9px] font-bold text-blue-500 tracking-wider uppercase">
+                    Healthcare CRM
+                  </span>
+                </div>
+              )}
             </div>
-            <div>
-              <span className="font-extrabold text-sm tracking-tight text-gray-900 dark:text-zinc-50 block">
-                {clinicSettings.clinicName}
-              </span>
-              <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 tracking-wide uppercase">
-                Reception Dashboard
-              </span>
-            </div>
+
+            {/* Collapse Toggle trigger */}
+            <button 
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="p-1.5 rounded-lg hover:bg-[var(--hover-color)] border transition-colors cursor-pointer text-[var(--text-secondary)]"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              {isSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+            </button>
           </div>
 
-          {/* Navigation Tab Links */}
-          <div className="hidden md:flex items-center gap-1.5 bg-gray-100 dark:bg-zinc-800/80 p-1.5 rounded-xl border border-gray-200/10">
+          {/* Navigation Links */}
+          <nav className="p-4 space-y-1.5">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer text-left",
                 activeTab === 'dashboard'
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-gray-950 dark:hover:text-zinc-150"
+                  ? "bg-blue-500 text-white shadow-md shadow-blue-500/10"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--hover-color)] hover:text-[var(--text-primary)]"
               )}
             >
-              <BarChart2 className="h-4 w-4 text-teal-500" />
-              Overview
+              <BarChart2 className="h-4 w-4 shrink-0" />
+              {!isSidebarCollapsed && <span>Overview</span>}
             </button>
+
             <button
               onClick={() => setActiveTab('history')}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer text-left",
                 activeTab === 'history'
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-gray-950 dark:hover:text-zinc-150"
+                  ? "bg-blue-500 text-white shadow-md shadow-blue-500/10"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--hover-color)] hover:text-[var(--text-primary)]"
               )}
             >
-              <History className="h-4 w-4 text-blue-500" />
-              Call History
+              <History className="h-4 w-4 shrink-0" />
+              {!isSidebarCollapsed && <span>Call Archives</span>}
             </button>
+
             <button
               onClick={() => setActiveTab('settings')}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer text-left",
                 activeTab === 'settings'
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
-                  : "text-gray-500 dark:text-zinc-400 hover:text-gray-950 dark:hover:text-zinc-150"
+                  ? "bg-blue-500 text-white shadow-md shadow-blue-500/10"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--hover-color)] hover:text-[var(--text-primary)]"
               )}
             >
-              <SettingsIcon className="h-4 w-4 text-indigo-500" />
-              Settings
+              <SettingsIcon className="h-4 w-4 shrink-0" />
+              {!isSidebarCollapsed && <span>Settings</span>}
             </button>
-          </div>
+          </nav>
+        </div>
 
-          {/* Right Toolbar */}
-          <div className="flex items-center gap-4">
-            {/* Mode Switcher */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="h-10 w-10 rounded-xl border border-gray-200/60 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-600 dark:text-zinc-300 transition-colors shadow-sm cursor-pointer"
-            >
-              {darkMode ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-            </button>
-
-            {/* Vapi Connection Tag */}
-            <div className="hidden sm:flex items-center gap-2 border border-gray-250 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 py-1.5 px-3 rounded-xl shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                Vapi Connected
-              </span>
+        {/* Sidebar Footer User Profile */}
+        <div className="p-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="h-9 w-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 shrink-0 font-bold text-sm">
+              AD
             </div>
+            {!isSidebarCollapsed && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold truncate text-[var(--text-primary)]">Admin Staff</span>
+                <span className="text-[10px] truncate text-[var(--text-secondary)]">staff@dental.com</span>
+              </div>
+            )}
           </div>
         </div>
-      </nav>
+      </aside>
 
-      {/* Main Grid Wrapper */}
-      <main className="max-w-[1400px] mx-auto px-6 pt-8">
-        {activeTab === 'dashboard' && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Welcome Sub-Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200/50 dark:border-zinc-800/50 pb-6">
+      {/* Main Workspace Column */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        {/* 6. Dashboard Header Redesign */}
+        <header 
+          className="sticky top-0 z-30 h-16 border-b flex items-center justify-between px-6 md:px-8 backdrop-blur-md bg-opacity-90"
+          style={{ backgroundColor: 'var(--bg-header)', borderColor: 'var(--border-color)' }}
+        >
+          {/* Header Left Welcome */}
+          <div className="hidden sm:flex flex-col">
+            <h1 className="text-sm font-extrabold tracking-tight text-[var(--text-primary)] uppercase">
+              Dental Reception Hub
+            </h1>
+            <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
+              {getFormattedDate()}
+            </span>
+          </div>
+
+          {/* Header Search Field */}
+          <div className="relative max-w-xs w-full hidden md:block">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-secondary)]" />
+            <input 
+              type="text" 
+              placeholder="Search patients, calls, appointments..."
+              className="pl-9 pr-4 py-1.5 w-full bg-[var(--bg-page)] text-xs border rounded-xl"
+              style={{ borderColor: 'var(--border-color)' }}
+            />
+          </div>
+
+          {/* Header Toolbar Actions */}
+          <div className="flex items-center gap-3.5 ml-auto sm:ml-0">
+            {/* Quick Actions Action */}
+            <button 
+              onClick={startCall}
+              disabled={isCallActive}
+              className="py-1.5 px-3 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-white bg-blue-500 hover:bg-blue-600 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Quick Dial</span>
+            </button>
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button 
+                className="h-9 w-9 rounded-xl border flex items-center justify-center hover:bg-[var(--hover-color)] text-[var(--text-secondary)] cursor-pointer"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
+                <Bell className="h-4 w-4" />
+              </button>
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 border-2 border-[var(--bg-header)]" />
+            </div>
+
+            {/* Dark/Light Mode Theme Switcher */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="h-9 w-9 rounded-xl border flex items-center justify-center hover:bg-[var(--hover-color)] text-[var(--text-secondary)] cursor-pointer"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              {darkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            {/* Avatar Visual profile */}
+            <div className="h-9 w-9 rounded-xl border bg-[var(--hover-color)] flex items-center justify-center text-[var(--text-secondary)] cursor-pointer shrink-0" style={{ borderColor: 'var(--border-color)' }}>
+              <UserIcon className="h-4 w-4" />
+            </div>
+          </div>
+        </header>
+
+        {/* Content Body Area */}
+        <main className="flex-1 p-6 md:p-8 max-w-[1440px] w-full mx-auto space-y-8">
+          {activeTab === 'dashboard' && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Statistics Grid Rows */}
+              <StatsGrid />
+
+              {/* Layout Content Section Splits */}
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Columns (Charts & Tables) */}
+                <div className="xl:col-span-8 space-y-8">
+                  <ChartsSection />
+                  <RecentCalls />
+                </div>
+
+                {/* Right Columns (Sarah Widget & Calendar Sync widgets) */}
+                <div className="xl:col-span-4 space-y-8">
+                  {/* Sarah Voice Agent Widget (Persistent, houses transcript & insights now) */}
+                  <VoiceAgentWidget />
+
+                  {/* Context-Aware Bottom Widgets */}
+                  {isCallActive ? (
+                    <BookingSummary />
+                  ) : (
+                    <CalendarPreview />
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'history' && (
+            <div className="space-y-6 animate-fadeIn">
               <div>
-                <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                  Dental Reception Hub
+                <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                  Call Archives
                 </h1>
-                <p className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
-                  <span>Welcome back, Admin</span>
-                  <span className="h-1 w-1 rounded-full bg-gray-350 dark:bg-zinc-750" />
-                  <span>Clinic Status: <span className="text-emerald-500 font-bold">Open</span></span>
+                <p className="text-xs text-[var(--text-secondary)] mt-1 font-semibold">
+                  View transcripts, booking updates, and calendar operations logs from all patients.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <span className="text-xs font-bold text-gray-800 dark:text-zinc-200 block">
-                    Wednesday, July 22, 2026
-                  </span>
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-550">
-                    Shift: {clinicSettings.workingHoursStart} - {clinicSettings.workingHoursEnd} ({clinicSettings.timezone})
-                  </span>
-                </div>
-              </div>
+              <RecentCalls />
             </div>
+          )}
 
-            {/* Statistics Row */}
-            <StatsGrid />
+          {activeTab === 'settings' && (
+            <SettingsPanel />
+          )}
+        </main>
+      </div>
 
-            {/* Split Section Layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-              
-              {/* Left Column (Main Charts & Tables) */}
-              <div className="xl:col-span-8 space-y-8">
-                <ChartsSection />
-                <RecentCalls />
-              </div>
-
-              {/* Right Column (Widget panel stack - call widgets and context widgets) */}
-              <div className="xl:col-span-4 space-y-8">
-                {/* Voice Agent widget is persistent at the top of the right stack */}
-                <VoiceAgentWidget />
-
-                {/* Dynamic context widgets */}
-                {isCallActive ? (
-                  <>
-                    <BookingSummary />
-                    <TranscriptPanel />
-                  </>
-                ) : (
-                  <>
-                    <CalendarPreview />
-                    <AiInsights />
-                  </>
-                )}
-              </div>
-
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'history' && (
-          <div className="space-y-6 animate-fadeIn">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                Call Archives
-              </h1>
-              <p className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mt-1">
-                View detailed transcripts, audio recordings, and Google Calendar sync states for all client calls.
-              </p>
-            </div>
-            <RecentCalls />
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsPanel />
-        )}
-      </main>
-
-      {/* Floating command bar */}
+      {/* Floating call command shortcut controls */}
       <FloatingCallControls activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   )
